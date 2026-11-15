@@ -1,0 +1,19 @@
+--- a/crates/adapters/binance/src/spot/http/parse.rs
++++ b/crates/adapters/binance/src/spot/http/parse.rs
+@@ -1211,7 +1211,7 @@
+     // Decode symbols group
+     let (symbols_block_len, symbols_count) = cursor.read_group_header()?;
+ 
+-    if symbols_block_len != SYMBOL_BLOCK_LENGTH as u16 {
++    if symbols_block_len < SYMBOL_BLOCK_LENGTH as u16 {
+         return Err(SbeDecodeError::InvalidBlockLength {
+             expected: SYMBOL_BLOCK_LENGTH as u16,
+             actual: symbols_block_len,
+@@ -1242,6 +1242,7 @@
+         let _default_self_trade_prevention_mode = cursor.read_u8()?;
+         let _allowed_self_trade_prevention_modes = cursor.read_u8()?;
+         let _peg_instructions_allowed = cursor.read_u8()?;
++        cursor.advance(usize::from(symbols_block_len) - SYMBOL_BLOCK_LENGTH)?;
+ 
+         let (_filters_block_len, filters_count) = cursor.read_group_header()?;
+         let mut filters = BinanceSymbolFiltersSbe::default();

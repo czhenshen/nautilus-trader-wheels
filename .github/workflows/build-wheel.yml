@@ -1,0 +1,101 @@
+name: build-nautilus-rc9-sbe36
+
+# Builds nautilus-trader 2.0.0rc9 with the Binance Spot SBE schema 3:6 fix
+# (upstream commit ac2e471, PR #5667) and publishes the wheel as a release asset.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-wheel.yml"
+      - "patches/**"
+
+permissions:
+  contents: write
+
+env:
+  UPSTREAM_REPO: nautechsystems/nautilus_trader
+  UPSTREAM_REF: v2.0.0rc9
+  RELEASE_TAG: v2.0.0rc9-sbe36
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Checkout ${{ env.UPSTREAM_REPO }} at ${{ env.UPSTREAM_REF }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.UPSTREAM_REPO }}
+          ref: ${{ env.UPSTREAM_REF }}
+          path: nt
+
+      - name: Free disk space
+        working-directory: nt
+        run: |
+          sudo bash scripts/ci/free-disk-space.sh \
+            --android --dotnet --docker-images --tool-cache \
+            --haskell --large-packages --extra --max-build
+
+      - name: Apply SBE 3:6 patch
+        run: git -C nt apply --verbose repo/patches/sbe36.patch
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up Rust 1.99.1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          toolchain: "1.99.1"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -o Acquire::Retries=5
+          sudo apt-get install -y --no-install-recommends clang lld make pkg-config patchelf -o Acquire::Retries=5
+          python -m pip install --upgrade pip "maturin==1.15.0"
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            nt/target
+          key: ${{ runner.os }}-rc9-sbe36-${{ hashFiles('nt/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rc9-sbe36-
+
+      - name: Build wheel
+        working-directory: nt/python
+        env:
+          CARGO_BUILD_JOBS: "2"
+          CARGO_NET_RETRY: "10"
+        run: |
+          maturin build --release --locked --out ../dist
+          ls -lh ../dist
+          sha256sum ../dist/*.whl | tee ../dist/SHA256SUMS
+
+      - name: Smoke test wheel
+        run: |
+          python -m venv /tmp/wheel-venv
+          /tmp/wheel-venv/bin/python -m pip install --quiet nt/dist/nautilus_trader-*.whl
+          /tmp/wheel-venv/bin/python -c "import nautilus_trader as n; from nautilus_trader.adapters.binance import load_binance_instruments; print('version:', n.__version__)"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --title "nautilus-trader 2.0.0rc9 + Binance Spot SBE 3:6 fix" \
+              --notes-file repo/RELEASE_NOTES.md
+          gh release upload "$RELEASE_TAG" nt/dist/*.whl nt/dist/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --clobber
