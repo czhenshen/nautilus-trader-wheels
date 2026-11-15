@@ -33,17 +33,21 @@ Requires CPython 3.13 on Linux x86_64 (same as the upstream rc9 wheel).
 
 ## Rebuild
 
-Actions -> `build-nautilus-rc9-sbe36` -> *Run workflow*. The job checks out the
-upstream tag, applies `patches/sbe36.patch`, builds with maturin and uploads the
-wheel to the `v2.0.0rc9-sbe36` release.
+Actions -> `build-nautilus-rc9-sbe36` -> *Run workflow*. The job checks out
+[`czhenshen/nautilus_trader`](https://github.com/czhenshen/nautilus_trader) at tag
+`v2.0.0rc9-cz1` (upstream `v2.0.0rc9` + the fix), builds with maturin and uploads
+the wheel to the `v2.0.0rc9-sbe36` release.
 
 ## Patch
 
 `patches/sbe36.patch` is exactly the upstream fix (two hunks in
-`crates/adapters/binance/src/spot/http/parse.rs`).
+`crates/adapters/binance/src/spot/http/parse.rs`). It is already applied in the
+fork [`czhenshen/nautilus_trader`](https://github.com/czhenshen/nautilus_trader)
+at tag `v2.0.0rc9-cz1`, which is what the workflow builds.
 
 ## License
 
 The wheel is built from [nautilus_trader](https://github.com/nautechsystems/nautilus_trader)
-tag `v2.0.0rc9`, licensed under LGPL-3.0-only. Sources: the upstream tag plus
-`patches/sbe36.patch` in this repository.
+tag `v2.0.0rc9`, licensed under LGPL-3.0-only. Sources: the fork
+[`czhenshen/nautilus_trader`](https://github.com/czhenshen/nautilus_trader)
+tag `v2.0.0rc9-cz1` (upstream snapshot + `patches/sbe36.patch`).

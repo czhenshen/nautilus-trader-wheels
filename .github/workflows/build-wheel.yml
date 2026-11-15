@@ -1,7 +1,8 @@
 name: build-nautilus-rc9-sbe36
 
 # Builds nautilus-trader 2.0.0rc9 with the Binance Spot SBE schema 3:6 fix
-# (upstream commit ac2e471, PR #5667) and publishes the wheel as a release asset.
+# (upstream commit ac2e471, PR #5667) from the patched fork and publishes the
+# wheel as a release asset.
 
 on:
   workflow_dispatch:
@@ -15,8 +16,8 @@ permissions:
   contents: write
 
 env:
-  UPSTREAM_REPO: nautechsystems/nautilus_trader
-  UPSTREAM_REF: v2.0.0rc9
+  UPSTREAM_REPO: czhenshen/nautilus_trader
+  UPSTREAM_REF: v2.0.0rc9-cz1
   RELEASE_TAG: v2.0.0rc9-sbe36
 
 jobs:
@@ -42,9 +43,6 @@ jobs:
           sudo bash scripts/ci/free-disk-space.sh \
             --android --dotnet --docker-images --tool-cache \
             --haskell --large-packages --extra --max-build
-
-      - name: Apply SBE 3:6 patch
-        run: git -C nt apply --verbose repo/patches/sbe36.patch
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
