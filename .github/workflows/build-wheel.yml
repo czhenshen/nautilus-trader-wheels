@@ -79,7 +79,7 @@ jobs:
         run: |
           maturin build --release --locked --out ../dist
           ls -lh ../dist
-          sha256sum ../dist/*.whl | tee ../dist/SHA256SUMS
+          (cd ../dist && sha256sum *.whl) | tee ../dist/SHA256SUMS
 
       - name: Smoke test wheel
         run: |
