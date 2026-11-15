@@ -23,11 +23,13 @@ mechanism.
 ## Install
 
 ```bash
-curl -LO https://github.com/czhenshen/nautilus-trader-wheels/releases/download/v2.0.0rc9-sbe36/nautilus_trader-2.0.0rc9-cp313-cp313-linux_x86_64.whl
-curl -LO https://github.com/czhenshen/nautilus-trader-wheels/releases/download/v2.0.0rc9-sbe36/SHA256SUMS
-sha256sum -c SHA256SUMS
-uv pip install ./nautilus_trader-2.0.0rc9-cp313-cp313-linux_x86_64.whl
+curl -LO https://github.com/czhenshen/nautilus-trader-wheels/releases/download/v2.0.0rc9-sbe36/nautilus_trader-2.0.0rc9-cp313-cp313-manylinux_2_34_x86_64.whl
+echo "9e7cffe3a7fb08f4fe7b32d8023b4f12d9fc1a0e24a6198859ee4c64133f20e2  nautilus_trader-2.0.0rc9-cp313-cp313-manylinux_2_34_x86_64.whl" | sha256sum -c -
+uv pip install ./nautilus_trader-2.0.0rc9-cp313-cp313-manylinux_2_34_x86_64.whl
 ```
+
+(`SHA256SUMS` next to the wheel was generated before the path prefix was fixed and
+lists `../dist/<wheel>`; the hash above is authoritative.)
 
 Requires CPython 3.13 on Linux x86_64 (same as the upstream rc9 wheel).
 
